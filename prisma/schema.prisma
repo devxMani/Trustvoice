@@ -1,0 +1,111 @@
+// Prisma Schema for TrustVoice
+// Run: prisma generate && prisma db push
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── NextAuth Models ────────────────────────────────────────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── Core App Models ─────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  accounts Account[]
+  sessions Session[]
+  profile  Profile?
+}
+
+model Profile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Revenue & Tier
+  stripeAccountId      String?   // Stripe Connect account ID
+  stripeApiKey         String?   // Optional: user's own read-only Stripe key
+  verifiedRevenueCents Int       @default(0) // Last 30d verified revenue in cents
+  tier                 Tier      @default(FREE)
+  lastVerifiedAt       DateTime?
+
+  // Character customization
+  characterSkin    String @default("default")
+  characterHair    String @default("brown")
+  characterOutfit  String @default("casual")
+  characterColor   String @default("#ff8c42") // shirt color hex
+  petType          String @default("plant")
+
+  // Voice agent
+  agentWebhookUrl String?
+  agentName       String?
+
+  // Game state
+  positionX Float @default(400)
+  positionY Float @default(400)
+  lastSeen  DateTime @default(now())
+  isOnline  Boolean  @default(false)
+
+  // Social
+  bio       String?
+  startup   String?
+  twitterUrl String?
+  linkedinUrl String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Tier {
+  FREE      // < $1k/mo
+  STARTER   // $1k-$5k/mo
+  GROWTH    // $5k-$20k/mo
+  SCALE     // $20k+/mo
+}
