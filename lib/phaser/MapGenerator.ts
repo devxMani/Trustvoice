@@ -1,8 +1,6 @@
 // lib/phaser/MapGenerator.ts
 // Generates the full TrustVoice world tilemap layout procedurally.
 
-import Phaser from "phaser";
-
 export const MAP_COLS = 100;
 export const MAP_ROWS = 80;
 export const TILE_SIZE = 32;

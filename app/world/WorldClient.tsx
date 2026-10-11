@@ -5,7 +5,8 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
-import { LiveKitRoom, AudioRenderer } from "@livekit/components-react";
+import { LiveKitRoom, RoomAudioRenderer, useRoomContext } from "@livekit/components-react";
+import { RoomEvent } from "livekit-client";
 import "@livekit/components-styles";
 
 import { GameSidebar } from "@/components/ui/GameSidebar";
@@ -60,6 +61,22 @@ type DataMsgType = "position" | "chat" | "presence";
 interface DataMsg {
   type: DataMsgType;
   payload: unknown;
+}
+
+// LiveKit internal data channel listener component
+function LiveKitDataListener({
+  onDataReceived,
+}: {
+  onDataReceived: (data: Uint8Array, participant?: any) => void;
+}) {
+  const room = useRoomContext();
+  useEffect(() => {
+    room.on(RoomEvent.DataReceived, onDataReceived as any);
+    return () => {
+      room.off(RoomEvent.DataReceived, onDataReceived as any);
+    };
+  }, [room, onDataReceived]);
+  return null;
 }
 
 export function WorldClient({ initialPlayer, livekitUrl }: WorldClientProps) {
@@ -333,12 +350,14 @@ export function WorldClient({ initialPlayer, livekitUrl }: WorldClientProps) {
             connect={true}
             audio={true}
             video={false}
-            onDataReceived={handleDataReceived as Parameters<typeof import("@livekit/components-react").LiveKitRoom>[0]["onDataReceived"]}
             onDisconnected={() => setInVoice(false)}
             className="absolute inset-0"
           >
+            {/* LiveKit data message subscriber */}
+            <LiveKitDataListener onDataReceived={handleDataReceived} />
+
             {/* Render remote audio tracks */}
-            <AudioRenderer />
+            <RoomAudioRenderer />
 
             {/* Spatial audio logic (only active when in world, not inside private building room) */}
             <SpatialAudio

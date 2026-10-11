@@ -1,7 +1,7 @@
 // lib/phaser/scenes/BootScene.ts
 // First scene: generates all assets, shows loading screen
 
-import Phaser from "phaser";
+import * as Phaser from "phaser";
 import { generateTextures } from "../AssetLoader";
 
 export class BootScene extends Phaser.Scene {

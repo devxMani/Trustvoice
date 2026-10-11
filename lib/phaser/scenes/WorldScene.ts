@@ -1,7 +1,7 @@
 // lib/phaser/scenes/WorldScene.ts
 // Main game world: tilemap, player, other players, pets, proximity detection
 
-import Phaser from "phaser";
+import * as Phaser from "phaser";
 import {
   MAP_COLS,
   MAP_ROWS,

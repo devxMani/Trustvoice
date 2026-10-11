@@ -2,7 +2,7 @@
 // Programmatically generates all pixel-art sprites & tiles as canvas textures.
 // This avoids needing external image files for the MVP.
 
-import Phaser from "phaser";
+import * as Phaser from "phaser";
 
 /** Palette */
 export const PALETTE = {
@@ -52,7 +52,7 @@ export function generateTextures(scene: Phaser.Scene): void {
 // ─── Tiles ───────────────────────────────────────────────────────────────────
 
 function generateTiles(scene: Phaser.Scene): void {
-  const g = scene.make.graphics({ x: 0, y: 0, add: false });
+  const g = scene.make.graphics({}, false);
 
   // Grass tile
   g.fillStyle(PALETTE.grassLight);
@@ -223,7 +223,7 @@ function generateCharacters(scene: Phaser.Scene): void {
     shirtColors.forEach((shirt, oi) => {
       hairColors.forEach((hair, hi) => {
         const key = `char_${si}_${oi}_${hi}`;
-        const g = scene.make.graphics({ x: 0, y: 0, add: false });
+        const g = scene.make.graphics({}, false);
 
         DIRS.toString(); // appease linter
         for (let dir = 0; dir < DIRS; dir++) {
@@ -339,7 +339,7 @@ function generatePets(scene: Phaser.Scene): void {
   };
 
   Object.entries(pets).forEach(([name, drawFn]) => {
-    const g = scene.make.graphics({ x: 0, y: 0, add: false });
+    const g = scene.make.graphics({}, false);
     const W = 24;
     const FRAMES = 2;
 
@@ -496,7 +496,7 @@ function generateBuildings(scene: Phaser.Scene): void {
 
 function generateStarterHouse(scene: Phaser.Scene): void {
   const W = 128, H = 96;
-  const g = scene.make.graphics({ x: 0, y: 0, add: false });
+  const g = scene.make.graphics({}, false);
 
   // Foundation/base
   g.fillStyle(PALETTE.wallBeige);
@@ -535,7 +535,7 @@ function generateStarterHouse(scene: Phaser.Scene): void {
 
 function generateGrowthOffice(scene: Phaser.Scene): void {
   const W = 160, H = 112;
-  const g = scene.make.graphics({ x: 0, y: 0, add: false });
+  const g = scene.make.graphics({}, false);
 
   // Base
   g.fillStyle(0xe0e8f0);
@@ -577,7 +577,7 @@ function generateGrowthOffice(scene: Phaser.Scene): void {
 
 function generateScaleHQ(scene: Phaser.Scene): void {
   const W = 192, H = 160;
-  const g = scene.make.graphics({ x: 0, y: 0, add: false });
+  const g = scene.make.graphics({}, false);
 
   // Main body
   g.fillStyle(0xd8d8e8);
@@ -618,7 +618,7 @@ function generateScaleHQ(scene: Phaser.Scene): void {
 
 function generateWhalLounge(scene: Phaser.Scene): void {
   const W = 224, H = 192;
-  const g = scene.make.graphics({ x: 0, y: 0, add: false });
+  const g = scene.make.graphics({}, false);
 
   // Main body
   g.fillStyle(0x1a1a2e);
@@ -669,7 +669,7 @@ function generateWhalLounge(scene: Phaser.Scene): void {
 
 function generateSign(scene: Phaser.Scene): void {
   const W = 64, H = 48;
-  const g = scene.make.graphics({ x: 0, y: 0, add: false });
+  const g = scene.make.graphics({}, false);
   // Post
   g.fillStyle(0x806030);
   g.fillRect(28, 24, 8, 24);
@@ -687,7 +687,7 @@ function generateSign(scene: Phaser.Scene): void {
 // ─── UI Elements ──────────────────────────────────────────────────────────────
 
 function generateUI(scene: Phaser.Scene): void {
-  const g = scene.make.graphics({ x: 0, y: 0, add: false });
+  const g = scene.make.graphics({}, false);
 
   // Chat bubble
   g.fillStyle(0xffffff);

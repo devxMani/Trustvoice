@@ -5,7 +5,7 @@ import { getTierFromRevenue } from "./tiers";
 import { Tier } from "@prisma/client";
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2024-11-20.acacia",
+  apiVersion: "2025-02-24.acacia",
   typescript: true,
 });
 
@@ -24,7 +24,7 @@ export async function verifyRevenueWithApiKey(
   apiKey: string
 ): Promise<RevenueResult> {
   const userStripe = new Stripe(apiKey, {
-    apiVersion: "2024-11-20.acacia",
+    apiVersion: "2025-02-24.acacia",
     typescript: true,
   });
 

@@ -47,9 +47,6 @@ export async function GET() {
       lastSeen: { gte: fiveMinutesAgo },
       NOT: { userId: session.user.id },
     },
-    include: {
-      user: { select: { name: true, image: true } },
-    },
     select: {
       userId: true,
       positionX: true,
@@ -61,7 +58,7 @@ export async function GET() {
       agentName: true,
       startup: true,
       bio: true,
-      user: true,
+      user: { select: { name: true, image: true } },
     },
   });
 

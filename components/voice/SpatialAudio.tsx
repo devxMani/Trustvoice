@@ -83,9 +83,9 @@ export function SpatialAudio({
       // Audio elements managed by LiveKit's AudioRenderer; we just track the ref
     };
 
-    room.on(RoomEvent.TrackSubscribed, handleTrackSubscribed as Parameters<typeof room.on>[1]);
+    room.on(RoomEvent.TrackSubscribed, handleTrackSubscribed as any);
     return () => {
-      room.off(RoomEvent.TrackSubscribed, handleTrackSubscribed as Parameters<typeof room.on>[1]);
+      room.off(RoomEvent.TrackSubscribed, handleTrackSubscribed as any);
     };
   }, [room]);
 
