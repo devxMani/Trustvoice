@@ -98,7 +98,7 @@ export class WorldScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.cameras.main.setBackgroundColor("#3a5c2a");
+    this.cameras.main.setBackgroundColor("#78cb6e");
 
     // Build the tilemap
     this.buildTilemap();
@@ -304,6 +304,23 @@ export class WorldScene extends Phaser.Scene {
         label.setVisible(isLocked);
       }
     });
+
+    if (this.localPlayerData) {
+      this.localPlayerData.tier = tier;
+    }
+
+    // Auto-evolve companion pet according to tier!
+    const tierPets: Record<Tier, string> = {
+      FREE: "plant",
+      STARTER: "robot",
+      GROWTH: "rocket",
+      SCALE: "crown",
+    };
+    const newPet = tierPets[tier];
+    if (newPet && this.localPlayer?.pet && this.textures.exists(`pet_${newPet}`)) {
+      this.localPlayer.pet.setTexture(`pet_${newPet}`);
+      this.localPlayer.pet.play(`pet_${newPet}_bounce`);
+    }
   }
 
   // ─── Local Player ──────────────────────────────────────────────────────────
@@ -657,24 +674,53 @@ export class WorldScene extends Phaser.Scene {
       player.chatTimer?.destroy();
     }
 
-    const bubble = this.add
-      .text(0, -70, text, {
+    const playerName = isLocal ? (this.localPlayerData?.name || "Marc Lou") : (player as any).data?.name || "Founder";
+    const playerTier = isLocal ? (this.localPlayerData?.tier || "SCALE") : (player as any).data?.tier || "FREE";
+    const tierRevText = playerTier === "SCALE" ? "$205K/mo 💎" : playerTier === "GROWTH" ? "$15K/mo 🚀" : playerTier === "STARTER" ? "$3.2K/mo 🤖" : "$400/mo 🌱";
+
+    // Header label: e.g. "Marc Lou $205K/mo 💎"
+    const headerText = this.add
+      .text(0, -90, `${playerName} ${tierRevText}`, {
         fontFamily: "monospace",
         fontSize: "8px",
-        color: "#000000",
-        backgroundColor: "#ffffffee",
-        padding: { x: 6, y: 4 },
-        wordWrap: { width: 120 },
-        maxLines: 3,
+        fontStyle: "bold",
+        color: "#ffd700",
       })
-      .setOrigin(0.5)
-      .setDepth(20);
+      .setOrigin(0.5);
 
-    const bubbleContainer = this.add.container(0, 0, [bubble]);
+    // Body speech text
+    const bodyText = this.add
+      .text(0, -76, text, {
+        fontFamily: "monospace",
+        fontSize: "8px",
+        color: "#ffffff",
+        wordWrap: { width: 140 },
+        maxLines: 4,
+        align: "center",
+      })
+      .setOrigin(0.5);
+
+    const bgWidth = Math.max(headerText.width, bodyText.width) + 16;
+    const bgHeight = headerText.height + bodyText.height + 14;
+    const bgY = -83;
+
+    // Dark sleek bubble background matching Marc Lou's screenshot
+    const bgGraphics = this.add.graphics();
+    bgGraphics.fillStyle(0x161a24, 0.95);
+    bgGraphics.lineStyle(1.5, 0x3d4758, 0.9);
+    bgGraphics.fillRoundedRect(-bgWidth / 2, bgY - bgHeight / 2, bgWidth, bgHeight, 6);
+    bgGraphics.strokeRoundedRect(-bgWidth / 2, bgY - bgHeight / 2, bgWidth, bgHeight, 6);
+
+    // Downward speech indicator arrow
+    bgGraphics.fillStyle(0x161a24, 0.95);
+    bgGraphics.fillTriangle(-5, bgY + bgHeight / 2, 5, bgY + bgHeight / 2, 0, bgY + bgHeight / 2 + 5);
+
+    const bubbleContainer = this.add.container(0, 0, [bgGraphics, headerText, bodyText]);
+    bubbleContainer.setDepth(50);
     player.container.add(bubbleContainer);
     player.chatBubble = bubbleContainer;
 
-    player.chatTimer = this.time.delayedCall(4000, () => {
+    player.chatTimer = this.time.delayedCall(5000, () => {
       bubbleContainer.destroy();
       player.chatBubble = undefined;
     });

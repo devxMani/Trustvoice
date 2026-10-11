@@ -7,35 +7,45 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  let session = null;
+  try {
+    session = await auth();
+  } catch {
+    // Guest mode
   }
 
-  const body = await req.json();
+  const body = await req.json().catch(() => ({}));
   const { x, y } = body as { x: number; y: number };
 
   if (typeof x !== "number" || typeof y !== "number") {
     return NextResponse.json({ error: "x, y required" }, { status: 400 });
   }
 
-  await prisma.profile.update({
-    where: { userId: session.user.id },
-    data: {
-      positionX: x,
-      positionY: y,
-      lastSeen: new Date(),
-      isOnline: true,
-    },
-  });
+  if (session?.user?.id) {
+    try {
+      await prisma.profile.update({
+        where: { userId: session.user.id },
+        data: {
+          positionX: x,
+          positionY: y,
+          lastSeen: new Date(),
+          isOnline: true,
+        },
+      });
+    } catch {
+      // DB optional
+    }
+  }
 
   return NextResponse.json({ ok: true });
 }
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  let session = null;
+  try {
+    session = await auth();
+  } catch {
+    // Guest mode
   }
 
   // Get players seen in the last 5 minutes
@@ -45,7 +55,7 @@ export async function GET() {
     where: {
       isOnline: true,
       lastSeen: { gte: fiveMinutesAgo },
-      NOT: { userId: session.user.id },
+      ...(session?.user?.id ? { NOT: { userId: session.user.id } } : {}),
     },
     select: {
       userId: true,

@@ -108,6 +108,17 @@ export function WorldClient({ initialPlayer, livekitUrl }: WorldClientProps) {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [inVoice, setInVoice] = useState(false);
 
+  const [currentTier, setCurrentTier] = useState<Tier>(initialPlayer.tier);
+  const [bottomChatInput, setBottomChatInput] = useState("");
+
+  const handleTierSelect = useCallback((tier: Tier) => {
+    setCurrentTier(tier);
+    const scene = (window as any).__trustVoiceScene;
+    if (scene) {
+      scene.updatePlayerTier(tier);
+    }
+  }, []);
+
   // Modal states
   const [showCustomizer, setShowCustomizer] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
@@ -405,7 +416,7 @@ export function WorldClient({ initialPlayer, livekitUrl }: WorldClientProps) {
               <Minimap
                 playerPosition={localPosition}
                 remotePlayers={remotePlayers}
-                currentTier={initialPlayer.tier}
+                currentTier={currentTier}
               />
             </div>
 
@@ -413,29 +424,95 @@ export function WorldClient({ initialPlayer, livekitUrl }: WorldClientProps) {
             <MobileTouchControls />
 
             {/* Top HUD Bar */}
-            <div className="absolute top-4 left-4 z-40 flex items-center gap-2">
-              <div className="bg-black/75 rounded-xl px-3.5 py-2 border border-white/10 backdrop-blur-md flex items-center gap-2">
-                <span className="font-pixel text-xs text-white">🎙️ TrustVoice</span>
-                <span className="text-[10px] bg-blue-500/20 text-blue-300 font-mono px-2 py-0.5 rounded-full border border-blue-500/30">
-                  {currentBuildingRoom ? `Room: ${currentBuildingRoom}` : "Spatial World"}
-                </span>
+            <div className="absolute top-4 left-4 right-4 z-40 flex items-center justify-between pointer-events-none">
+              <div className="flex items-center gap-2 pointer-events-auto">
+                <div className="bg-black/85 rounded-xl px-3.5 py-2 border border-white/10 backdrop-blur-md flex items-center gap-2 shadow-xl">
+                  <span className="font-pixel text-xs text-white">🎙️ TrustVoice</span>
+                  <span className="text-[10px] bg-blue-500/20 text-blue-300 font-mono px-2 py-0.5 rounded-full border border-blue-500/30">
+                    {currentBuildingRoom ? `Room: ${currentBuildingRoom}` : "Spatial World"}
+                  </span>
+                </div>
+
+                {/* Instant Tier Switcher */}
+                <div className="hidden md:flex items-center gap-1 bg-black/85 border border-white/10 rounded-xl p-1 backdrop-blur-md shadow-xl">
+                  <span className="text-[10px] text-white/40 px-2 font-mono uppercase tracking-wider">Tier:</span>
+                  {(["FREE", "STARTER", "GROWTH", "SCALE"] as Tier[]).map((t) => {
+                    const labels = {
+                      FREE: "🌱 Free",
+                      STARTER: "🤖 $1K-$5K",
+                      GROWTH: "🚀 $5K-$20K",
+                      SCALE: "👑 Whale $20K+",
+                    };
+                    const active = currentTier === t;
+                    return (
+                      <button
+                        key={t}
+                        onClick={() => handleTierSelect(t)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all ${
+                          active
+                            ? "bg-white/20 text-white shadow-sm border border-white/30 scale-105"
+                            : "text-white/60 hover:text-white hover:bg-white/5"
+                        }`}
+                        title={`Switch to ${labels[t]}`}
+                      >
+                        {labels[t]}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
-              {/* Quick Hall of Fame Button */}
-              <button
-                onClick={() => setShowLeaderboard(true)}
-                className="bg-black/75 hover:bg-black/90 text-amber-300 border border-amber-500/30 rounded-xl px-3 py-2 text-xs backdrop-blur-md flex items-center gap-1.5 transition-all shadow-md font-semibold"
-              >
-                <span>🏆 Leaderboard</span>
-              </button>
+              {/* Right HUD actions */}
+              <div className="flex items-center gap-2 pointer-events-auto">
+                {/* Quick Hall of Fame Button */}
+                <button
+                  onClick={() => setShowLeaderboard(true)}
+                  className="bg-black/85 hover:bg-black/95 text-amber-300 border border-amber-500/30 rounded-xl px-3 py-2 text-xs backdrop-blur-md flex items-center gap-1.5 transition-all shadow-xl font-semibold"
+                >
+                  <span>🏆 Leaderboard</span>
+                </button>
 
-              {/* Quick Studio Button */}
-              <button
-                onClick={() => setShowCustomizer(true)}
-                className="bg-black/75 hover:bg-black/90 text-purple-300 border border-purple-500/30 rounded-xl px-3 py-2 text-xs backdrop-blur-md flex items-center gap-1.5 transition-all shadow-md font-semibold"
-              >
-                <span>✨ Studio</span>
-              </button>
+                {/* Quick Studio Button */}
+                <button
+                  onClick={() => setShowCustomizer(true)}
+                  className="bg-black/85 hover:bg-black/95 text-purple-300 border border-purple-500/30 rounded-xl px-3 py-2 text-xs backdrop-blur-md flex items-center gap-1.5 transition-all shadow-xl font-semibold"
+                >
+                  <span>✨ Studio</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Speech / Chat Bar at bottom */}
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-40 max-w-md w-full px-4">
+              <div className="bg-black/85 border border-white/20 rounded-2xl p-1.5 backdrop-blur-md shadow-2xl flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-sm flex-shrink-0">
+                  💬
+                </div>
+                <input
+                  type="text"
+                  value={bottomChatInput}
+                  onChange={(e) => setBottomChatInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && bottomChatInput.trim()) {
+                      handleSendMessage(bottomChatInput.trim());
+                      setBottomChatInput("");
+                    }
+                  }}
+                  placeholder="Type a message (displays speech bubble)..."
+                  className="flex-1 bg-transparent border-none text-xs text-white placeholder:text-white/40 focus:outline-none px-2"
+                />
+                <button
+                  onClick={() => {
+                    if (bottomChatInput.trim()) {
+                      handleSendMessage(bottomChatInput.trim());
+                      setBottomChatInput("");
+                    }
+                  }}
+                  className="bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs px-3.5 py-1.5 rounded-xl transition-all shadow-md flex-shrink-0"
+                >
+                  Say
+                </button>
+              </div>
             </div>
           </LiveKitRoom>
         ) : (

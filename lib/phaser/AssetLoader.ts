@@ -6,27 +6,27 @@ import * as Phaser from "phaser";
 
 /** Palette */
 export const PALETTE = {
-  // Terrain
-  grassLight: 0x6abf5e,
-  grassDark: 0x5a9e50,
-  grassEdge: 0x4a8e40,
-  sand: 0xd4b896,
-  sandDark: 0xb89870,
-  water: 0x4a90d9,
-  waterLight: 0x6aafff,
-  path: 0xc8a878,
+  // Terrain (vibrant cozy palette matching TrustMRR chat screenshots)
+  grassLight: 0x78cb6e,
+  grassDark: 0x66b85a,
+  grassEdge: 0x54a24a,
+  sand: 0xfce8bf,
+  sandDark: 0xebd29c,
+  water: 0x4aa0e6,
+  waterLight: 0x7ac4ff,
+  path: 0xfce8bf,
 
-  // Buildings
-  wallBeige: 0xf0e0b0,
-  wallGray: 0xa0a0b0,
-  roofRed: 0xd03020,
-  roofBlue: 0x2060d0,
-  roofGreen: 0x30a050,
-  roofTeal: 0x30c0b0,
-  windowYellow: 0xffe060,
-  windowBlue: 0x60a0ff,
-  doorBrown: 0x804010,
-  doorWood: 0xa06020,
+  // Buildings (clean cute houses and teal shops)
+  wallBeige: 0xfffcf0,
+  wallGray: 0xa8b0c0,
+  roofRed: 0xdf4838,
+  roofBlue: 0x3672e8,
+  roofGreen: 0x38b05c,
+  roofTeal: 0x42b8aa,
+  windowYellow: 0xffe478,
+  windowBlue: 0x68b0ff,
+  doorBrown: 0x8a4e22,
+  doorWood: 0xaa6832,
 
   // UI / misc
   outline: 0x222222,

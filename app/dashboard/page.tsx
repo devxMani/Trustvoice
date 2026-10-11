@@ -14,19 +14,57 @@ export default async function DashboardPage({
 }: {
   searchParams: Promise<{ connected?: string; error?: string }>;
 }) {
-  const session = await auth();
-  if (!session?.user?.id) redirect("/login");
+  let session = null;
+  try {
+    session = await auth();
+  } catch {
+    // Auth optional for demo mode
+  }
 
   const params = await searchParams;
 
-  const profile = await prisma.profile.findUnique({
-    where: { userId: session.user.id },
-    include: { user: true },
-  });
+  let profile = null;
+  if (session?.user?.id) {
+    try {
+      profile = await prisma.profile.findUnique({
+        where: { userId: session.user.id },
+        include: { user: true },
+      });
+    } catch {
+      // DB optional in demo mode
+    }
+  }
 
-  if (!profile) redirect("/login");
+  // Graceful fallback profile for demo mode
+  if (!profile) {
+    profile = {
+      id: "demo-profile",
+      userId: session?.user?.id || "founder-demo",
+      user: {
+        name: session?.user?.name || "Marc Lou",
+        email: session?.user?.email || "marc@trustvoice.app",
+        image: session?.user?.image || null,
+      },
+      verifiedRevenueCents: 20500000,
+      tier: "SCALE" as const,
+      lastVerifiedAt: new Date(),
+      characterSkin: "0",
+      characterOutfit: "0",
+      characterHair: "0",
+      characterColor: "#ff8c42",
+      petType: "crown",
+      agentWebhookUrl: null,
+      agentName: "Marc's Voice AI",
+      startup: "TrustMRR",
+      bio: "Building voice-first multiplayer worlds for founders.",
+      twitterUrl: "https://twitter.com",
+      linkedinUrl: null,
+      stripeAccountId: null,
+      stripeApiKey: null,
+    };
+  }
 
-  const connectUrl = createConnectUrl(session.user.id);
+  const connectUrl = createConnectUrl(profile.userId);
   const tierConfig = TIERS[profile.tier];
 
   return (
