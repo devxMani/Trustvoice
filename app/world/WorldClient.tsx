@@ -81,6 +81,7 @@ function LiveKitDataListener({
 
 export function WorldClient({ initialPlayer, livekitUrl }: WorldClientProps) {
   const [livekitToken, setLivekitToken] = useState<string>("");
+  const [isDemoMode, setIsDemoMode] = useState(false);
   const [currentRoom, setCurrentRoom] = useState("world-main");
   const [currentBuildingRoom, setCurrentBuildingRoom] = useState<string | null>(null);
 
@@ -132,13 +133,19 @@ export function WorldClient({ initialPlayer, livekitUrl }: WorldClientProps) {
   // ─── LiveKit Token ─────────────────────────────────────────────────────────
 
   const fetchToken = useCallback(async (roomName: string) => {
-    const res = await fetch("/api/livekit/token", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ roomName }),
-    });
-    const data = await res.json();
-    return data.token as string;
+    try {
+      const res = await fetch("/api/livekit/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roomName }),
+      });
+      const data = await res.json();
+      setIsDemoMode(Boolean(data.isDemo || String(data.token).startsWith("fallback-demo-token")));
+      return data.token as string;
+    } catch {
+      setIsDemoMode(true);
+      return `demo-offline-${Date.now()}`;
+    }
   }, []);
 
   useEffect(() => {
@@ -358,7 +365,7 @@ export function WorldClient({ initialPlayer, livekitUrl }: WorldClientProps) {
           <LiveKitRoom
             token={livekitToken}
             serverUrl={livekitUrl}
-            connect={true}
+            connect={!isDemoMode}
             audio={true}
             video={false}
             onDisconnected={() => setInVoice(false)}
@@ -427,9 +434,9 @@ export function WorldClient({ initialPlayer, livekitUrl }: WorldClientProps) {
             <div className="absolute top-4 left-4 right-4 z-40 flex items-center justify-between pointer-events-none">
               <div className="flex items-center gap-2 pointer-events-auto">
                 <div className="bg-black/85 rounded-xl px-3.5 py-2 border border-white/10 backdrop-blur-md flex items-center gap-2 shadow-xl">
-                  <span className="font-pixel text-xs text-white">🎙️ TrustVoice</span>
+                  <span className="font-pixel text-xs text-white">TrustVoice</span>
                   <span className="text-[10px] bg-blue-500/20 text-blue-300 font-mono px-2 py-0.5 rounded-full border border-blue-500/30">
-                    {currentBuildingRoom ? `Room: ${currentBuildingRoom}` : "Spatial World"}
+                    {currentBuildingRoom ? `Room: ${currentBuildingRoom}` : isDemoMode ? "Demo World" : "Spatial World"}
                   </span>
                 </div>
 
