@@ -4,9 +4,28 @@ import Stripe from "stripe";
 import { getTierFromRevenue } from "./tiers";
 import { Tier } from "@prisma/client";
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2025-02-24.acacia",
-  typescript: true,
+let stripeClient: Stripe | undefined;
+
+function getStripeClient(): Stripe {
+  if (!stripeClient) {
+    const secretKey = process.env.STRIPE_SECRET_KEY;
+    if (!secretKey) {
+      throw new Error("STRIPE_SECRET_KEY is required for Connect verification");
+    }
+
+    stripeClient = new Stripe(secretKey, {
+      apiVersion: "2025-02-24.acacia",
+      typescript: true,
+    });
+  }
+
+  return stripeClient;
+}
+
+export const stripe = new Proxy({} as Stripe, {
+  get(_target, property, receiver) {
+    return Reflect.get(getStripeClient(), property, receiver);
+  },
 });
 
 export interface RevenueResult {
@@ -82,7 +101,7 @@ export async function verifyRevenueWithConnect(
   let startingAfter: string | undefined;
 
   while (hasMore) {
-    const txns = await stripe.balanceTransactions.list(
+    const txns = await getStripeClient().balanceTransactions.list(
       {
         limit: 100,
         type: "charge",
