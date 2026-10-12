@@ -18,7 +18,7 @@ import { CharacterCustomizer } from "@/components/ui/CharacterCustomizer";
 import { AgentDemoModal } from "@/components/ui/AgentDemoModal";
 import { LeaderboardModal } from "@/components/ui/LeaderboardModal";
 import { getZoneRoomName } from "@/lib/livekit";
-import type { Tier } from "@prisma/client";
+import type { Tier } from "@/lib/tiers";
 import type { PlayerState } from "@/lib/phaser/scenes/WorldScene";
 
 // Dynamic import of PhaserGame (client-only, no SSR)
@@ -80,8 +80,10 @@ function LiveKitDataListener({
 }
 
 export function WorldClient({ initialPlayer, livekitUrl }: WorldClientProps) {
-  const [livekitToken, setLivekitToken] = useState<string>("");
-  const [isDemoMode, setIsDemoMode] = useState(false);
+  // The map is playable without external credentials. LiveKit upgrades this
+  // session when configured, but never gates the local world renderer.
+  const [livekitToken, setLivekitToken] = useState<string>("demo-local-world");
+  const [isDemoMode, setIsDemoMode] = useState(true);
   const [currentRoom, setCurrentRoom] = useState("world-main");
   const [currentBuildingRoom, setCurrentBuildingRoom] = useState<string | null>(null);
 
@@ -149,9 +151,10 @@ export function WorldClient({ initialPlayer, livekitUrl }: WorldClientProps) {
   }, []);
 
   useEffect(() => {
-    const roomName = getZoneRoomName("main");
-    fetchToken(roomName).then(setLivekitToken);
-  }, [fetchToken]);
+    // Deliberately stay local until a real LiveKit setup is supplied.
+    // This keeps the world fast and usable in a fresh clone.
+    setLivekitToken("demo-local-world");
+  }, []);
 
   // ─── Phaser Callbacks ──────────────────────────────────────────────────────
 

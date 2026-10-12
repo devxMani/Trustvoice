@@ -50,6 +50,10 @@ export interface BuildingDef {
 
 export const BUILDINGS: BuildingDef[] = [
   // ─ Starter Village ─
+  // Central founder plaza: the first screen should feel like a place, not an
+  // empty quadrant. These landmarks sit around the default demo spawn.
+  { texture: "building_starter", tileX: 17, tileY: 12, widthTiles: 4, heightTiles: 3, zone: "Starter Village", label: "COMMONS", buildingId: "founder_commons" },
+  { texture: "building_growth", tileX: 27, tileY: 12, widthTiles: 5, heightTiles: 3, zone: "Starter Village", label: "VOICE LAB", buildingId: "voice_lab" },
   { texture: "building_starter", tileX: 4,  tileY: 4,  widthTiles: 4, heightTiles: 3, zone: "Starter Village", label: "HQ", buildingId: "starter_hq" },
   { texture: "building_starter", tileX: 14, tileY: 6,  widthTiles: 4, heightTiles: 3, zone: "Starter Village", label: "Cowork", buildingId: "starter_cowork" },
   { texture: "building_starter", tileX: 4,  tileY: 18, widthTiles: 4, heightTiles: 3, zone: "Starter Village", label: "Office", buildingId: "starter_office" },
@@ -81,6 +85,12 @@ export interface DecorationDef {
 
 export const DECORATIONS: DecorationDef[] = [
   // Starter Village decorations
+  { texture: "tile_tree",     tileX: 17, tileY: 7  },
+  { texture: "tile_tree",     tileX: 31, tileY: 8  },
+  { texture: "tile_bench",    tileX: 21, tileY: 14 },
+  { texture: "tile_bench",    tileX: 25, tileY: 14 },
+  { texture: "tile_lamp",     tileX: 16, tileY: 16 },
+  { texture: "tile_lamp",     tileX: 33, tileY: 16 },
   { texture: "tile_fountain", tileX: 22, tileY: 10 },
   { texture: "tile_tree",     tileX: 8,  tileY: 12 },
   { texture: "tile_tree",     tileX: 30, tileY: 5  },

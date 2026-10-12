@@ -287,6 +287,32 @@ function generateCharacters(scene: Phaser.Scene): void {
         }
 
         g.generateTexture(key, SHEET_W, SHEET_H);
+
+        // Graphics.generateTexture creates one texture; it does not infer the
+        // 3x4 frame layout. Crop the generated sheet into real frame textures
+        // so each agent renders as one 32x48 person instead of the whole sheet.
+        const source = scene.textures.get(key).getSourceImage() as HTMLCanvasElement;
+        for (let frameIndex = 0; frameIndex < FRAMES * DIRS; frameIndex++) {
+          const frameCanvas = document.createElement("canvas");
+          frameCanvas.width = CHAR_W;
+          frameCanvas.height = CHAR_H;
+          const context = frameCanvas.getContext("2d");
+          if (context) {
+            context.imageSmoothingEnabled = false;
+            context.drawImage(
+              source,
+              (frameIndex % FRAMES) * CHAR_W,
+              Math.floor(frameIndex / FRAMES) * CHAR_H,
+              CHAR_W,
+              CHAR_H,
+              0,
+              0,
+              CHAR_W,
+              CHAR_H
+            );
+            scene.textures.addCanvas(`${key}_f${frameIndex}`, frameCanvas);
+          }
+        }
         g.destroy();
       });
     });
@@ -308,8 +334,7 @@ export function createCharacterAnimations(
       scene.anims.create({
         key: animKey,
         frames: Array.from({ length: FRAMES }, (_, i) => ({
-          key,
-          frame: dirIdx * FRAMES + i,
+          key: `${key}_f${dirIdx * FRAMES + i}`,
         })),
         frameRate: 8,
         repeat: -1,
@@ -320,7 +345,7 @@ export function createCharacterAnimations(
     if (!scene.anims.exists(idleKey)) {
       scene.anims.create({
         key: idleKey,
-        frames: [{ key, frame: dirIdx * FRAMES + 1 }],
+        frames: [{ key: `${key}_f${dirIdx * FRAMES + 1}` }],
         frameRate: 1,
         repeat: -1,
       });

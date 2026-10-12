@@ -16,7 +16,7 @@ import {
 } from "../MapGenerator";
 import { createCharacterAnimations } from "../AssetLoader";
 import { canAccessZone } from "../../tiers";
-import type { Tier } from "@prisma/client";
+import type { Tier } from "@/lib/tiers";
 
 // Types for multiplayer sync (sent via LiveKit data channel)
 export interface PlayerState {
@@ -115,12 +115,16 @@ export class WorldScene extends Phaser.Scene {
     // Create local player
     this.createLocalPlayer();
 
+    // A lively demo world should be legible on first load. These are local
+    // stand-ins for founders until a realtime room has participants.
+    this.spawnDemoFounders();
+
     // Input
     this.setupInput();
 
     // Camera
     this.cameras.main.startFollow(this.localPlayer.container, true, 0.08, 0.08);
-    this.cameras.main.setZoom(1.5); // Closer zoom for pixel art clarity
+    this.cameras.main.setZoom(1.25); // Show the plaza while keeping sprites crisp
     this.cameras.main.setBounds(0, 0, MAP_WIDTH_PX, MAP_HEIGHT_PX);
 
     // Proximity ring
@@ -139,32 +143,71 @@ export class WorldScene extends Phaser.Scene {
     this.groundLayer = this.add.group();
     const tileData = buildTilemapData();
 
-    const tileTextures = [
-      "tile_grass",
-      "tile_grass_dark",
-      "tile_sand",
-      "tile_water_0",
-      "tile_flowers",
-      "tile_bush",
-    ];
+    // Draw the terrain into one batched display object. The old implementation
+    // created 8,000+ individual Images, which made /world slow to create and
+    // expensive to keep in the display list. This stays crisp at any zoom while
+    // keeping the same tile-authored layout.
+    const ground = this.add.graphics().setDepth(0);
+    const palette = {
+      grass: 0x79cf69,
+      grassAlt: 0x72c662,
+      grassShadow: 0x5aae55,
+      path: 0xf4d79d,
+      pathEdge: 0xe0bd7d,
+      water: 0x63c6c0,
+      waterDeep: 0x43a8ab,
+      flowerRed: 0xe9555d,
+      flowerCream: 0xfff1b7,
+    };
+
+    ground.fillStyle(palette.grass);
+    ground.fillRect(0, 0, MAP_WIDTH_PX, MAP_HEIGHT_PX);
 
     for (let row = 0; row < MAP_ROWS; row++) {
       for (let col = 0; col < MAP_COLS; col++) {
         const tileIdx = tileData[row][col];
-        const texKey =
-          tileIdx === Tile.Water
-            ? "tile_water_0"
-            : tileTextures[tileIdx] ?? "tile_grass";
+        const x = col * TILE_SIZE;
+        const y = row * TILE_SIZE;
+        const seed = (col * 17 + row * 31) % 11;
 
-        const tile = this.add.image(
-          col * TILE_SIZE + TILE_SIZE / 2,
-          row * TILE_SIZE + TILE_SIZE / 2,
-          texKey
-        );
-        tile.setDepth(0);
-        this.groundLayer.add(tile);
+        if (tileIdx === Tile.Sand) {
+          ground.fillStyle(palette.path);
+          ground.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+          ground.fillStyle(palette.pathEdge, 0.5);
+          if (row % 3 === 0) ground.fillRect(x + 5, y + 7, 5, 2);
+          if (col % 4 === 0) ground.fillRect(x + 20, y + 22, 4, 2);
+        } else if (tileIdx === Tile.Water) {
+          ground.fillStyle(palette.water);
+          ground.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+          ground.fillStyle(palette.waterDeep, 0.7);
+          ground.fillRect(x + ((row % 2) * 8), y + 8, 12, 2);
+          ground.fillRect(x + 5, y + 20, 16, 2);
+        } else {
+          ground.fillStyle(seed === 0 ? palette.grassAlt : palette.grass);
+          ground.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+          // Tiny clustered pixels give the lawn the hand-painted pixel texture
+          // from the reference without allocating a sprite per tile.
+          if (seed < 4) {
+            ground.fillStyle(palette.grassShadow, 0.42);
+            ground.fillRect(x + 6 + seed, y + 8, 2, 3);
+            ground.fillRect(x + 20, y + 19 - seed, 2, 2);
+          }
+          if (tileIdx === Tile.Flowers) {
+            ground.fillStyle(seed % 2 ? palette.flowerCream : palette.flowerRed);
+            ground.fillRect(x + 9, y + 8, 4, 4);
+            ground.fillRect(x + 21, y + 21, 4, 4);
+            ground.fillStyle(0xffd85c);
+            ground.fillRect(x + 10, y + 9, 2, 2);
+          }
+        }
       }
     }
+
+    // Soft zone seams make the four neighbourhoods read as one connected town.
+    ground.lineStyle(3, 0x5ba957, 0.55);
+    ground.lineBetween(0, 40 * TILE_SIZE, MAP_WIDTH_PX, 40 * TILE_SIZE);
+    ground.lineBetween(50 * TILE_SIZE, 0, 50 * TILE_SIZE, MAP_HEIGHT_PX);
+    this.groundLayer.add(ground);
 
     // Animate water tiles
     this.time.addEvent({
@@ -343,7 +386,7 @@ export class WorldScene extends Phaser.Scene {
     // Ensure animations exist for this character
     createCharacterAnimations(this, charKey);
 
-    const sprite = this.add.sprite(0, 0, charKey).setDepth(10);
+    const sprite = this.add.sprite(0, 0, `${charKey}_f1`).setDepth(10);
 
     const pet = this.add
       .sprite(-16, 8, `pet_${data.petType ?? "plant"}`)
@@ -401,7 +444,7 @@ export class WorldScene extends Phaser.Scene {
 
     const charKey = `char_${skin}_${outfit}_0`;
     createCharacterAnimations(this, charKey);
-    this.localPlayer.sprite.setTexture(charKey);
+    this.localPlayer.sprite.setTexture(`${charKey}_f1`);
     this.localPlayer.sprite.play(`${charKey}_idle_${this.lastDirection}`);
 
     if (this.textures.exists(`pet_${petType}`)) {
@@ -597,12 +640,12 @@ export class WorldScene extends Phaser.Scene {
   }
 
   private createRemotePlayer(data: PlayerState): void {
-    const charKey = "char_0_0_0"; // simplified
+    const charKey = `char_${data.characterSkin ?? "0"}_${data.characterOutfit ?? "0"}_0`;
     if (!this.anims.exists(`${charKey}_idle_down`)) {
       createCharacterAnimations(this, charKey);
     }
 
-    const sprite = this.add.sprite(0, 0, charKey).setDepth(10);
+    const sprite = this.add.sprite(0, 0, `${charKey}_f1`).setDepth(10);
     sprite.play(`${charKey}_idle_down`);
 
     const pet = this.add
@@ -650,6 +693,16 @@ export class WorldScene extends Phaser.Scene {
       nameTag,
       data,
     });
+  }
+
+  private spawnDemoFounders(): void {
+    const founders: PlayerState[] = [
+      { id: "maya-demo", name: "Maya Chen", x: 620, y: 560, direction: "right", isMoving: false, tier: "GROWTH", characterSkin: "1", characterOutfit: "2", petType: "rocket" },
+      { id: "leo-demo", name: "Leo Park", x: 930, y: 560, direction: "left", isMoving: false, tier: "STARTER", characterSkin: "2", characterOutfit: "1", petType: "robot" },
+      { id: "sana-demo", name: "Sana Iyer", x: 650, y: 760, direction: "down", isMoving: false, tier: "FREE", characterSkin: "3", characterOutfit: "3", petType: "plant" },
+      { id: "jules-demo", name: "Jules Martin", x: 900, y: 760, direction: "up", isMoving: false, tier: "SCALE", characterSkin: "4", characterOutfit: "4", petType: "crown" },
+    ];
+    founders.forEach((founder) => this.createRemotePlayer(founder));
   }
 
   public removeRemotePlayer(id: string): void {

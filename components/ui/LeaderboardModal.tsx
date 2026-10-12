@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 import { Trophy, TrendingUp, Sparkles, X, Bot, Phone, RefreshCw } from "lucide-react";
 import { TierBadge } from "./TierBadge";
 import { formatRevenue } from "@/lib/tiers";
-import type { Tier } from "@prisma/client";
+import type { Tier } from "@/lib/tiers";
 
 interface LeaderboardEntry {
   rank: number;
@@ -49,7 +49,12 @@ export function LeaderboardModal({
         setFounders(data.leaderboard);
       }
     } catch (err) {
-      console.error(err);
+      // Demo mode keeps the social layer useful without a database.
+      setFounders([
+        { rank: 1, id: "founder-demo", name: "Marc Lou", verifiedRevenueCents: 20500000, tier: "SCALE" as Tier, startup: "TrustVoice", agentName: "Marc's Voice AI", petType: "crown", isOnline: true },
+        { rank: 2, id: "maya-demo", name: "Maya Chen", verifiedRevenueCents: 1280000, tier: "GROWTH" as Tier, startup: "Callflow", agentName: "Maya's Agent", petType: "rocket", isOnline: true },
+        { rank: 3, id: "leo-demo", name: "Leo Park", verifiedRevenueCents: 240000, tier: "STARTER" as Tier, startup: "SignalKit", agentName: "Leo's Agent", petType: "robot", isOnline: false },
+      ].filter((founder) => !tier || tier === "ALL" || founder.tier === tier));
     } finally {
       setLoading(false);
     }

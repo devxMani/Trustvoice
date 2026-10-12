@@ -16,7 +16,7 @@ import {
   Volume2,
 } from "lucide-react";
 import { TierBadge } from "./TierBadge";
-import type { Tier } from "@prisma/client";
+import type { Tier } from "@/lib/tiers";
 import { cn } from "@/lib/utils";
 
 interface OnlinePlayer {

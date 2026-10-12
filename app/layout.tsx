@@ -1,10 +1,6 @@
 // app/layout.tsx
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
-import { SessionProvider } from "next-auth/react";
-
-const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "TrustVoice — The Voice-AI Founders World",
@@ -32,8 +28,8 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className={`${inter.className} bg-gray-950 text-white antialiased`}>
-        <SessionProvider>{children}</SessionProvider>
+      <body className="bg-gray-950 text-white antialiased">
+        {children}
       </body>
     </html>
   );

@@ -8,7 +8,7 @@ import { X, Phone, Bot, Twitter, Linkedin } from "lucide-react";
 import { TierBadge } from "./TierBadge";
 import { Button } from "./button";
 import type { PlayerState } from "@/lib/phaser/scenes/WorldScene";
-import type { Tier } from "@prisma/client";
+import type { Tier } from "@/lib/tiers";
 
 interface PlayerCardProps {
   player: PlayerState & {

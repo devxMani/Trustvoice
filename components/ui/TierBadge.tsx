@@ -1,7 +1,7 @@
 // components/ui/TierBadge.tsx
 // Displays a revenue tier badge with color, emoji, and label.
 
-import { Tier } from "@prisma/client";
+import type { Tier } from "@/lib/tiers";
 import { TIERS } from "@/lib/tiers";
 import { cn } from "@/lib/utils";
 

@@ -6,7 +6,7 @@
 import { useState } from "react";
 import { Compass, Maximize2, Minimize2, Users } from "lucide-react";
 import { MAP_WIDTH_PX, MAP_HEIGHT_PX, ZONES } from "@/lib/phaser/MapGenerator";
-import type { Tier } from "@prisma/client";
+import type { Tier } from "@/lib/tiers";
 import type { PlayerState } from "@/lib/phaser/scenes/WorldScene";
 
 interface MinimapProps {

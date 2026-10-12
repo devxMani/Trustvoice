@@ -1,5 +1,5 @@
 // lib/tiers.ts — Tier logic, constants, and helpers
-import { Tier } from "@prisma/client";
+export type Tier = "FREE" | "STARTER" | "GROWTH" | "SCALE";
 
 // ─── Revenue Thresholds ──────────────────────────────────────────────────────
 

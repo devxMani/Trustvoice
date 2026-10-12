@@ -7,7 +7,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import type { Game } from "phaser";
 import type { PlayerState, WorldScene as WorldSceneType } from "@/lib/phaser/scenes/WorldScene";
-import type { Tier } from "@prisma/client";
+import type { Tier } from "@/lib/tiers";
 
 interface PhaserGameProps {
   playerData: PlayerState;
